@@ -2,6 +2,7 @@
 """Convenience module that provides default settings for the ``pages``
 application when the project ``settings`` module does not contain
 the appropriate settings."""
+from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 import collections
@@ -49,12 +50,37 @@ PAGE_TEMPLATES = get_setting('PAGE_TEMPLATES',
 
 
 def get_page_templates():
-    """The callable that is used by the CMS."""
+    """ /*+++ changed by Amir M. to make templates dynamic, a specific set of templates per 
+        tenant under templates/pages/<schema_name>/
+    """
     PAGE_TEMPLATES = get_setting('PAGE_TEMPLATES',
         default_value=())
+
     if isinstance(PAGE_TEMPLATES, collections.Callable):
         return PAGE_TEMPLATES()
     else:
+        # return PAGE_TEMPLATES
+        PAGE_TEMPLATES = (
+            ('pages/index.html', u' דף הבית'),
+            ('pages/contact.html', u' צור קשר'),
+            ('pages/default.html', u'דף מידע'),
+        )
+        
+        try:
+            from core.utils import get_tenant
+        except ModuleNotFoundError as e:
+            return PAGE_TEMPLATES
+            
+        tnnt = get_tenant()
+        
+        if tnnt:
+            sch = tnnt.schema_name
+            custom_tpl = []
+            p = Path(settings.TEMPLATES[0]['DIRS'][0] / 'pages' / sch)
+            if p.exists():
+                custom_tpl = [x for x in p.iterdir() if not x.name.startswith('_')]
+                return[(str(x), x.name,) for x in custom_tpl]
+                
         return PAGE_TEMPLATES
 
 # Set ``PAGE_TAGGING`` to ``False`` if you do not wish to use the
