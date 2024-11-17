@@ -5,7 +5,7 @@ the appropriate settings."""
 from pathlib import Path
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-import collections
+from collections.abc import Callable
 
 url = 'http://packages.python.org/django-page-cms/settings-list.html#%s'
 
@@ -56,7 +56,7 @@ def get_page_templates():
     PAGE_TEMPLATES = get_setting('PAGE_TEMPLATES',
         default_value=())
 
-    if isinstance(PAGE_TEMPLATES, collections.Callable):
+    if isinstance(PAGE_TEMPLATES, Callable):
         return PAGE_TEMPLATES()
     else:
         # return PAGE_TEMPLATES
